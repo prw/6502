@@ -34,7 +34,8 @@ ACR             := $A00B
 Addrl 			:= $92
 Addrh			:= $93
 Tstate			:= $94
-Dcounth			:= $95
+Dcountl			:= $95
+Dcounth			:= $96
 
 .DEFINE STATE_Command	#$30	; ascii 0
 .DEFINE STATE_Addrl 	#$31 	;   1
@@ -227,9 +228,9 @@ dataProcess:
 	; A -> BB, D->BB->B,B,B,....., E -> Execute @ A, R -> recv byte @ A
 	lda Tstate
 	cmp STATE_Command
-	bne @processCommand
+	bne processCommand
 getCommand:					; waiting on command, figure out what it is
-	lda Drecv
+	lda Drec
 	cmp COMMAND_A
 	bne @checkD
 	lda STATE_Addrl
@@ -243,7 +244,7 @@ getCommand:					; waiting on command, figure out what it is
 	sta Dsend
 	sta Tstate
 	rts
-@checkE
+@checkE:
 	cmp COMMAND_E
 	bne @checkR
 	jmp (Addrl)
@@ -263,10 +264,10 @@ getCommand:					; waiting on command, figure out what it is
 	sta Tstate
 	rts
 
-@processCommand:		; state is A,D,E,R
+processCommand:		; state is A,D,E,R
 	cmp STATE_Addrl
 	bne @checkAddrh
-	lda Drecv			; get addrl byte
+	lda Drec			; get addrl byte
 	sta Addrl
 	lda STATE_Addrh
 	sta Dsend
@@ -275,7 +276,7 @@ getCommand:					; waiting on command, figure out what it is
 @checkAddrh:
 	cmp STATE_Addrh
 	bne @checkDcountl
-	lda Drecv
+	lda Drec
 	sta Addrh
 	lda STATE_Command	; no command 
 	sta Dsend
@@ -284,7 +285,7 @@ getCommand:					; waiting on command, figure out what it is
 @checkDcountl:
 	cmp STATE_Dcountl
 	bne @checkDcounth
-	lda Drecv
+	lda Drec
 	sta Dcountl			; get low counter byte
 	lda STATE_Dcounth
 	sta Dsend
@@ -293,7 +294,7 @@ getCommand:					; waiting on command, figure out what it is
 @checkDcounth:
 	cmp STATE_Dcounth
 	bne @checkD
-	lda Drecv
+	lda Drec
 	sta Dcounth			; get high counter byte
 	lda STATE_D
 	sta Dsend
@@ -314,7 +315,7 @@ getCommand:					; waiting on command, figure out what it is
 	rts 				; counter expired
 
 @counterGood:
-	lda #$Drecv
+	lda Drec
 	sta (Addrl)
 	inc Addrl
 	bne @DaddrGood
@@ -353,10 +354,5 @@ SendString:
 @quit:
         sty Return1 ; bytes sent into $02
         rts
-; ======================================
-;displayLed:
-;; pass the hex value to be printed in X
-;       lda LEDCHARMAP, X
-;       sta OUTA
-;       rts
+; ============================================================================
 .END
