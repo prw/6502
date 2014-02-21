@@ -1,0 +1,6 @@
+Ram loaded programs must include the .org $6000 to be correctly placed.
+Will start all programs at $6000 so far. Might move this later.
+
+Need to determine how best to use functions in ROM from RAM programs.
+
+look into another assembler possibly...
